@@ -123,6 +123,9 @@ export function processUrl(src: string): string {
     }
   }
 
+  // Encode parentheses to prevent markdown link parsing issues
+  output = output.replace(/\(/g, '%28').replace(/\)/g, '%29');
+
   // Check if already wrapped before doing any encoding
   const alreadyWrapped = isAlreadyWrapped(output);
 
