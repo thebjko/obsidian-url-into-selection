@@ -106,40 +106,45 @@ export function isAlreadyWrapped(text: string): boolean {
 }
 
 /**
+ * Decode percent-encoded Unicode characters (e.g. Korean filenames) for
+ * readability, then re-encode parentheses to prevent Obsidian's markdown
+ * parser from misreading ) as the closing delimiter of a link.
+ *
+ * Applied after file:// URL conversion so Korean chars survive encodeURI.
+ */
+function normalizeUrlForObsidian(url: string): string {
+  try {
+    url = decodeURI(url);
+  } catch {}
+  return url.replace(/\(/g, "%28").replace(/\)/g, "%29");
+}
+
+/**
  * Process file URL, handle special characters, and wrap if needed
  */
 export function processUrl(src: string): string {
+  // [original] convert file path to file:// URL
   let output;
   if (testFilePath(src)) {
     output = fileUrl(src, { resolve: false });
-    try {
-      output = decodeURI(output);
-    } catch {}
   } else {
-    try {
-      output = decodeURI(src);
-    } catch {
-      output = src;
-    }
+    output = src;
   }
 
-  // Encode parentheses to prevent markdown link parsing issues
-  output = output.replace(/\(/g, '%28').replace(/\)/g, '%29');
+  // [korean fix] decode Unicode chars and re-encode parens
+  output = normalizeUrlForObsidian(output);
 
-  // Check if already wrapped before doing any encoding
+  // [original] wrap in angle brackets if needed
   const alreadyWrapped = isAlreadyWrapped(output);
 
-  // If already wrapped, return as-is
   if (alreadyWrapped) {
     return output;
   }
 
-  // Encode angle brackets to prevent conflicts
   if (/[<>]/.test(output)) {
     output = encodeAngleBrackets(output);
   }
 
-  // Wrap in angle brackets if contains special chars
   return needsAngleBrackets(output) ? `<${output}>` : output;
 }
 
