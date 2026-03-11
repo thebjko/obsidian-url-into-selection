@@ -113,7 +113,11 @@ export function processUrl(src: string): string {
   if (testFilePath(src)) {
     output = fileUrl(src, { resolve: false });
   } else {
-    output = src;
+    try {
+      output = decodeURI(src);
+    } catch {
+      output = src;
+    }
   }
 
   // Check if already wrapped before doing any encoding
