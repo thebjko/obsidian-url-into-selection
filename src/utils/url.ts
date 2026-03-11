@@ -112,6 +112,9 @@ export function processUrl(src: string): string {
   let output;
   if (testFilePath(src)) {
     output = fileUrl(src, { resolve: false });
+    try {
+      output = decodeURI(output);
+    } catch {}
   } else {
     try {
       output = decodeURI(src);
