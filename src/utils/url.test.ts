@@ -271,7 +271,7 @@ describe("URL Utilities", () => {
         "<https://example.com/path with spaces>",
       );
       expect(processUrl("https://example.com/page(1)")).toBe(
-        "<https://example.com/page(1)>",
+        "https://example.com/page%281%29",
       );
     });
 

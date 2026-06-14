@@ -30,13 +30,6 @@ export default function UrlIntoSelection(
   cb: string | ClipboardEvent,
   settings: PluginSettings,
 ): void {
-  // skip all if nothing should be done
-  if (
-    !editor.somethingSelected() &&
-    settings.nothingSelected === NothingSelected.doNothing
-  )
-    return;
-
   if (typeof cb !== "string" && !cb.clipboardData) {
     console.error("empty clipboardData in ClipboardEvent");
     return;
@@ -44,6 +37,18 @@ export default function UrlIntoSelection(
 
   const clipboardText = getCbText(cb);
   if (clipboardText === null) return;
+
+  if (
+    !editor.somethingSelected() &&
+    settings.nothingSelected === NothingSelected.doNothing
+  ) {
+    const url = clipboardText.trim();
+    if (!isUrl(url, settings)) return;
+
+    if (typeof cb !== "string") cb.preventDefault();
+    replace(editor, isWikilink(url) ? url : processUrl(url), null);
+    return;
+  }
 
   const { selectedText, replaceRange } = getSelnRange(editor, settings);
   const cursorOrRange = replaceRange || {

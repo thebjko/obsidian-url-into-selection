@@ -353,15 +353,32 @@ describe("NothingSelected Behaviors", () => {
   let editor: Editor;
 
   describe("doNothing mode", () => {
-    it("should skip processing when nothing is selected", () => {
+    it("should skip processing non-URL text when nothing is selected", () => {
       const settings = {
         ...DEFAULT_SETTINGS,
         nothingSelected: NothingSelected.doNothing,
       };
       editor = new Editor("some text", { line: 0, ch: 4 });
 
-      UrlIntoSelection(editor, "https://example.com", settings);
+      UrlIntoSelection(editor, "not a url", settings);
       expect(editor.getValue()).toBe("some text"); // No change
+    });
+
+    it("should paste a decoded URL when nothing is selected", () => {
+      const settings = {
+        ...DEFAULT_SETTINGS,
+        nothingSelected: NothingSelected.doNothing,
+      };
+      editor = new Editor("", { line: 0, ch: 0 });
+
+      UrlIntoSelection(
+        editor,
+        "https://www.teamblind.com/kr/post/%EB%8B%A4%EB%93%A4-%EC%A7%84%EC%A7%9C-%EC%96%B4%EB%94%94%EC%84%9C-%EB%A7%8C%EB%82%98%EC%84%9C-%EC%97%B0%EC%95%A0%ED%95%98%EC%8B%9C%EB%82%98%EC%9A%94-owyrhwCj",
+        settings,
+      );
+      expect(editor.getValue()).toBe(
+        "https://www.teamblind.com/kr/post/다들-진짜-어디서-만나서-연애하시나요-owyrhwCj",
+      );
     });
   });
 
@@ -490,7 +507,7 @@ describe("File Path Processing (processUrl function)", () => {
 
     it("should wrap URLs with parentheses in angle brackets", () => {
       UrlIntoSelection(editor, "https://example.com/page(1)", DEFAULT_SETTINGS);
-      expect(editor.getValue()).toBe("[link](<https://example.com/page(1)>)");
+      expect(editor.getValue()).toBe("[link](https://example.com/page%281%29)");
     });
 
     it("should encode angle brackets in URLs", () => {
@@ -583,7 +600,7 @@ describe("Quote Stripping for File Paths", () => {
         DEFAULT_SETTINGS,
       );
       expect(editor.getValue()).toBe(
-        "[some text](file:///V:/2022%20Trading%20Calendar.xlsx)",
+        "[some text](<file:///V:/2022 Trading Calendar.xlsx>)",
       );
     });
 
@@ -597,7 +614,7 @@ describe("Quote Stripping for File Paths", () => {
         DEFAULT_SETTINGS,
       );
       expect(editor.getValue()).toBe(
-        "[document](file:///C:/Program%20Files/My%20App/file.txt)",
+        "[document](<file:///C:/Program Files/My App/file.txt>)",
       );
     });
 
@@ -628,7 +645,7 @@ describe("Quote Stripping for File Paths", () => {
         DEFAULT_SETTINGS,
       );
       expect(editor.getValue()).toBe(
-        "[document](file:///Users/name/Documents/My%20File.txt)",
+        "[document](<file:///Users/name/Documents/My File.txt>)",
       );
     });
 
